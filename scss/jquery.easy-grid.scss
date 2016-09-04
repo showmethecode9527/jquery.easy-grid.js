@@ -1,0 +1,46 @@
+.easy-grid {
+    border: 1px solid #ccc;
+    
+    @at-root .easy-grid-header {
+        background: #dadada;
+    }
+
+    $row-height: 30px;
+    @at-root .easy-grid-body {
+        max-height: $row-height * 10;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    @at-root .easy-grid-row {
+        box-sizing: border-box;
+        height: $row-height;
+        font-size: 0;
+
+        & + .easy-grid-row {
+            border-top: 2px solid #ddd;
+        }
+
+        @at-root .easy-grid-col {
+            box-sizing: border-box;
+            display: inline-block;
+            height: 100%;
+            line-height: $row-height;
+
+            font-size: 16px;
+            text-align: center;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            .edit-status {
+                text-align: center;
+            }
+        }
+
+        @at-root .col-operate {
+            user-select: none;
+        }
+    }
+}
