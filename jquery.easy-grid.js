@@ -1,9 +1,11 @@
 /*!
  * 表格插件
  * @author Mathink 2016-09-03
- * @dependences 'jquery.easy-grid.css'
+ * @dependences jquery
+ *              jquery.easy-grid.css
  */
 ;(function ($) {
+    'use strict';
     $.fn.easyGrid = function (userConf) {
         // 默认配置项
         var defaultConf = {
@@ -20,7 +22,7 @@
         };
         // 获取用户配置项
         var conf = $.extend(defaultConf, userConf);
-        return this.each(function (i) {
+        return this.each(function () {
             // 检查配置项
             var confResult = checkConf(conf);
             if (confResult) {
@@ -158,15 +160,15 @@
                     if (showOperateCol.toString() === 'true') {
                         str +=  '<div class="easy-grid-col col-operate">' +
                                     // 修改(默认显示)
-                                    '<button class="btn-operate btn-update">' + updateStr + '</button>' +
+                                    '<button class="btn btn-operate btn-update">' + updateStr + '</button>' +
                                     // 删除(默认显示)
-                                    '<button class="btn-operate btn-del">' + delStr + '</button>' +
+                                    '<button class="btn btn-operate btn-del">' + delStr + '</button>' +
                                     // 保存(默认不显示, 点击"修改"后显示)
-                                    '<button class="btn-operate btn-save">' + saveStr + '</button>' +
+                                    '<button class="btn btn-operate btn-save">' + saveStr + '</button>' +
                                     // 取消(默认不显示, 点击"修改"后显示)
-                                    '<button class="btn-operate btn-cancel">' + cancelStr + '</button>' +
+                                    '<button class="btn btn-operate btn-cancel">' + cancelStr + '</button>' +
                                     // 取消(默认不显示, 增加行后显示)
-                                    '<button class="btn-operate btn-undo">' + cancelStr + '</button>' +
+                                    '<button class="btn btn-operate btn-undo">' + cancelStr + '</button>' +
                                 '</div>';
                     }
 
@@ -194,10 +196,17 @@
             if (typeof colWidth === 'undefined') {
                 return;
             } else if ($.isArray(colWidth)) {
+                var operateColWidth = conf.operateCol.width;
+                var $me;
+                // 对应行先迭代
                 $obj.find('.easy-grid-row').each(function () {
-                    $(this).children('.col-default').each(function (i) {
-                        $(this).width(colWidth[i]);
-                    }).siblings('.col-operate').width(conf.operateCol.width);
+                    $me = $(this);
+                    $me.children('.col-default').each(function (i) {
+                        // 这里不能直接使用width()方法(当width为百分数时会出问题)
+                        // $(this).width(colWidth[i]);
+                        this.style.width = colWidth[i];
+                    });
+                    $me.children('.col-operate')[0].style.width = operateColWidth;
                 });
             }
 
@@ -246,7 +255,7 @@
                 // 每次只能增加一行(如果新增的行没有保存, 则不能再增加新的行)
                 $(this).addClass('off');
                 var $gridBody = $obj.find('.easy-grid-body');
-                var $rowCopy;
+                // var $rowCopy;
 
                 copyRow($obj, $gridBody, position);
                 // 在首行插入
@@ -368,7 +377,7 @@
          */
         function addUpdateEvent($obj, primaryKey) {
             var $col, colVal, $btn;
-            var keys = typeof primaryKey === 'undefined' ? [] : primaryKey;
+            // var keys = typeof primaryKey === 'undefined' ? [] : primaryKey;
             // $obj.find('.btn-update').
             $obj.find('.btn-update').on('click', function () {
                 $btn = $(this);
