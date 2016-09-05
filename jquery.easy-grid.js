@@ -1,6 +1,7 @@
 /*!
  * 表格插件
  * @author Mathink 2016-09-03
+ * @dependences 'jquery.easy-grid.css'
  */
 ;(function ($) {
     $.fn.easyGrid = function (userConf) {
@@ -12,6 +13,7 @@
             showOperateCol: false,
             addRowPosition: 'end',
             addRowPrimaryKey: [],
+            addRowPrimaryKeyDefaultVal: [],
             primaryKey: [],
             showPager: false,
             pagerSize: 10
@@ -290,15 +292,20 @@
             }
 
             var addRowPrimaryKey = $obj.data('easyGridConf').addRowPrimaryKey;
-            var $col;
-            // 如果首行正处于修改状态
+            var addRowPrimaryKeyDefaultVal = $obj.data('easyGridConf').addRowPrimaryKeyDefaultVal;
+            var $col, keyIndex;
+            // 如果首行/尾行正处于修改状态
             if ($rowCopy.hasClass('row-editable')) {
                 $rowCopy.find('.edit-status').val('').attr('placeholder', '')
                     .end().find('.btn-cancel').hide().siblings('.btn-undo').show();
                 $rowCopy.find('.col-default').each(function () {
                     $col = $(this);
-                    if ($.inArray($col.attr('data-key'), addRowPrimaryKey) === -1) {
+                    keyIndex = $.inArray($col.attr('data-key'), addRowPrimaryKey);
+                    if (keyIndex === -1) {
                         $col.children('.edit-status').removeAttr('disabled');
+                    } else {
+                        // 2016-9-5 15:52:24 增加不可修改行的默认值
+                        $col.children('.edit-status').val(addRowPrimaryKeyDefaultVal[keyIndex]);
                     }
                 });
                 if (flag === 'start') {
@@ -312,10 +319,13 @@
             } else {
                 $rowCopy.addClass('row-editable').find('.col-default').each(function () {
                     $col = $(this);
-                    if ($.inArray($col.attr('data-key'), addRowPrimaryKey) === -1) {
+                    keyIndex = $.inArray($col.attr('data-key'), addRowPrimaryKey);
+                    if (keyIndex === -1) {
                         $col.html('<input type="text" class="edit-status" placeholder="">');
                     } else {
-                        $col.html('<input type="text" class="edit-status" disabled title="该项不可修改" placeholder="">');
+                        // 2016-9-5 15:52:24 增加不可修改行的默认值
+                        $col.html('<input type="text" class="edit-status" disabled title="该项不可修改" placeholder="">')
+                            .find('.edit-status').val(addRowPrimaryKeyDefaultVal[keyIndex]);
                     }
                 }).siblings('.col-operate').find('.btn-update, .btn-del, .btn-cancel').hide().siblings('.btn-save, .btn-undo').show();
                 if (flag === 'start') {

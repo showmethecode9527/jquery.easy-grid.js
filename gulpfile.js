@@ -2,6 +2,7 @@ var gulp = require('gulp'),
     sass = require('gulp-sass'),
     autoprefixer = require('gulp-autoprefixer'),
     cssmin = require('gulp-minify-css'),
+    uglify = require('gulp-uglify'),
     sourcemaps = require('gulp-sourcemaps'),
     rename = require('gulp-rename'),
     browserSync = require('browser-sync');
@@ -15,17 +16,30 @@ gulp.task('sass', function () {
         .pipe(sourcemaps.init())
             .pipe(sass())
             .pipe(autoprefixer(prefixerOptions))
+            .pipe(rename({suffix: '.min'}))
+            .pipe(cssmin())
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('css/'));
 });
 
-gulp.task('w', function () {
+gulp.task('w-sass', function () {
     gulp.watch('scss/*.scss', ['sass']);
+});
+
+gulp.task('js', function () {
+    gulp.src('jquery.easy-grid.js')
+        .pipe(rename({suffix: '.min'}))
+        .pipe(uglify())
+        .pipe(gulp.dest('.'));
+});
+
+gulp.task('w-js', function () {
+    gulp.watch('jquery.easy-grid.js', ['js']);
 });
 
 gulp.task('bs', function () {
     browserSync({
-        files: ['css/**', 'demo/**'],
+        files: ['css/**', 'demo/**', 'jquery.easy-grid.js'],
         server: {
             directory: true,
             baseDir: '.'
@@ -39,4 +53,4 @@ gulp.task('bs', function () {
     });
 });
 
-gulp.task('default', ['w', 'bs']);
+gulp.task('default', ['bs', 'w-sass', 'w-js']);
