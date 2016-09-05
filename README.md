@@ -5,6 +5,7 @@ a easy jquery plugin of grid
         $(selector).easyGrid(options)
 
 ### 配置项(options)
+``` JavaScript
         {
             // {Boolean} 是否显示表头, 可缺省(默认为false)
             showHeader: true,
@@ -89,4 +90,5 @@ a easy jquery plugin of grid
             // 数据源, 支持对象数组和二维数组(暂不支持)
             data: []
         }
+```
 
