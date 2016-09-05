@@ -42,5 +42,11 @@
         @at-root .col-operate {
             user-select: none;
         }
+
+        @at-root .col-select {
+            input:focus {
+                outline: none;
+            }
+        }
     }
 }

@@ -11,9 +11,13 @@
         var defaultConf = {
             dataFlag: 0,
             showHeader: false,
+            showSelectCol: false,
+            selectColWidth: '0',
             showAddRow: false,
             showOperateCol: false,
             addRowPosition: 'end',
+            delRowsSelector: '',
+            delRowsFn: '',
             addRowPrimaryKey: [],
             addRowPrimaryKeyDefaultVal: [],
             primaryKey: [],
@@ -53,6 +57,8 @@
             var showHeader = conf.showHeader;
             // 是否显示操作列
             var showOperateCol = conf.showOperateCol;
+            // 是否显示"选择列"
+            var showSelectCol = conf.showSelectCol;
             // 表格源数据
             var data = conf.data;
 
@@ -64,6 +70,7 @@
 
                 var bodyParam = {
                     colKey: colKey,
+                    showSelectCol: showSelectCol,
                     showOperateCol: showOperateCol,
                     operateCol: conf.operateCol
                 };
@@ -75,7 +82,7 @@
                     // 表头字段, 当showHeader为false时无效
                     var header = conf.header;
                     // 1. 生成表头
-                    gridStr += generateGridHeader(header, showOperateCol, conf.operateCol);
+                    gridStr += generateGridHeader(header, showSelectCol, showOperateCol, conf.operateCol);
                     // 2. 生成表格主体内容
                     gridStr += generateGridBody(data, bodyParam);
                 }
@@ -91,16 +98,24 @@
          * 生成表头
          * @author Mathink 2016-09-04T00:08:27+0800
          * @param  {Array}   headerAry      表头项数据: ['姓名', '学号', '手机', '班级']
+         * @param  {Boolean} showSelectCol  是否显示"选择列"
          * @param  {Boolean} showOperateCol 是否显示操作列
          * @param  {Object}  operateCol     操作列的配置参数
          * @return {[type]}                 [description]
          */
-        function generateGridHeader(headerAry, showOperateCol, operateCol) {
+        function generateGridHeader(headerAry, showSelectCol, showOperateCol, operateCol) {
             if (typeof headerAry === 'undefined') {
                 return '';
             } else {
                 var str = '<div class="easy-grid-header">' +
                             '<div class="easy-grid-row">';
+
+                // 是否显示"选择列"
+                if (showSelectCol.toString() === 'true') {
+                    str +=  '<div class="easy-grid-col col-select">' +
+                                '<input type="checkbox" class="select-row select-row-all">' +
+                            '</div>';
+                }
 
                 headerAry.forEach(function (v) {
                     str += '<div class="easy-grid-col col-default">' + v + '</div>';
@@ -124,7 +139,8 @@
          */
         function generateGridBody(data, param) {
             var colKey = param.colKey;
-            var showOperateCol = typeof param.showOperateCol === 'undefined' ? false : param.showOperateCol;
+            var showOperateCol = param.showOperateCol;
+            var showSelectCol = param.showSelectCol;
             var operateCol = param.operateCol;
             var updateStr = '', delStr = '', saveStr = '', cancelStr = '';
             if (typeof operateCol !== 'undefined') {
@@ -149,8 +165,13 @@
             } else {
                 data.forEach(function (v) {
                     str += '<div class="easy-grid-row">';
-                    // 如果配置了选择列
-                    // str += '<div class="easy-grid-col col-select"></div>'
+                    // 如果配置了"选择列"
+                    if (showSelectCol.toString() === 'true') {
+                        str +=  '<div class="easy-grid-col col-select">' +
+                                    '<input type="checkbox" class="select-row">' +
+                                '</div>';
+                    }
+
                     colKey.forEach(function (keyItem) {
                         // 类名"col-default"表示基础列, 即由源数据直接产生的
                         // 与之相对应的是"col-select"和"col-operate"
@@ -188,6 +209,8 @@
          */
         function setStyles($obj) {
             var conf = $obj.data('easyGridConf');
+            var showSelectCol = conf.showSelectCol.toString();
+            var showOperateCol = conf.showOperateCol.toString();
             var colWidth = conf.colWidth;
 
             // 如果没有
@@ -196,9 +219,17 @@
             if (typeof colWidth === 'undefined') {
                 return;
             } else if ($.isArray(colWidth)) {
-                var operateColWidth = conf.operateCol.width;
+                // todo: 可优化配置项
+                var operateColWidth = 0;
+                var selectColWidth = conf.selectColWidth;
+                try {
+                    operateColWidth = conf.operateCol.width;
+                } catch (e) {
+                    console.log(e);
+                }
                 var $me;
-                // 对应行先迭代
+                // 对应行先迭代(因为行中的列是按配置中对应的key生成的)
+                // todo: 可考虑增加colWidth为对象数组的支持
                 $obj.find('.easy-grid-row').each(function () {
                     $me = $(this);
                     $me.children('.col-default').each(function (i) {
@@ -206,8 +237,15 @@
                         // $(this).width(colWidth[i]);
                         this.style.width = colWidth[i];
                     });
-                    $me.children('.col-operate')[0].style.width = operateColWidth;
+                    if (showSelectCol === 'true') {
+                        $me.children('.col-select')[0].style.width = selectColWidth;
+                    }
+                    if (showOperateCol === 'true') {
+                        $me.children('.col-operate')[0].style.width = operateColWidth;
+                    }
                 });
+                // $obj.find('.col-select')[0].style.width = selectColWidth;
+                // $obj.find('.col-operate')[0].style.width = operateColWidth;
             }
 
             // 默认隐藏"保存"、"取消"按钮(当点击"修改"时显示)
@@ -222,6 +260,8 @@
         function addEvent($obj) {
             var conf = $obj.data('easyGridConf');
             var showOperateCol = conf.showOperateCol;
+            var showSelectCol = conf.showSelectCol;
+            var delRowsSelector = conf.delRowsSelector;
             var showAddRow = conf.showAddRow;
 
             // 如果显示操作列
@@ -236,6 +276,16 @@
 
                 if (showAddRow.toString() === 'true') {
                     addAddRowEvent($obj, $(conf.addRowSelector), conf.addRowPosition);
+                }
+            }
+
+            // 如果显示"选择列"
+            if (showSelectCol.toString() === 'true') {
+                addSelectRowEvent($obj);
+
+                var $delRowsNode = $(delRowsSelector);
+                if ($delRowsNode.length !== 0) {
+                    addDelRowsEvent($obj, $delRowsNode);
                 }
             }
         }
@@ -460,7 +510,6 @@
                     }
                 }
             });
-            
         }
 
         /**
@@ -483,6 +532,57 @@
         }
 
         /**
+         * "选择行"事件
+         *     1. 点击内容中的复选按钮, 整行添加类名'selected'(方便控制样式, 取数据等)
+         *     2. 点击表头的复选按钮, 选中所有行, 再次点击, 取消选中所有行
+         *     3. 每次点击时, 都将选中行的数据缓存到$obj上(为避免性能问题, 暂不提供)
+         * @author Mathink 2016-09-05T23:31:24+0800
+         * @param  {[type]} $obj [description]
+         */
+        function addSelectRowEvent($obj) {
+            // 点击内容中的复选按钮
+            $obj.find('.easy-grid-body .select-row').on('click', function () {
+                // 整行切换类名"selected"
+                $(this).closest('.easy-grid-row').toggleClass('selected');
+                // 缓存数据(暂不缓存)
+            });
+
+            // 点击表头中的复选框
+            $obj.find('.easy-grid-header .select-row').on('click', function () {
+                var $me = $(this);
+                var $headerRow = $me.closest('.easy-grid-row');
+                if ($headerRow.hasClass('selected')) {
+                    $obj.find('.easy-grid-body .select-row:checked').trigger('click');
+                    $headerRow.removeClass('selected');
+                } else {
+                    $obj.find('.easy-grid-body .select-row:not(:checked)').trigger('click');
+                    $headerRow.addClass('selected');
+                }
+            });
+        }
+        
+        /**
+         * 批量删除事件
+         * @author Mathink 2016-09-06T00:10:26+0800
+         * @param  {[type]} $obj  [description]
+         * @param  {[type]} $node 批量删除按钮
+         */
+        function addDelRowsEvent($obj, $node) {
+            $node.on('click', function () {
+                var selectedData = [];
+                var delRowsFn = $obj.data('easyGridConf').delRowsFn;
+                // 获取所有选中行数据
+                $obj.find('.easy-grid-body .easy-grid-row.selected').each(function () {
+                    selectedData.push(fetchRowData($(this)));
+                });
+
+                if (typeof delRowsFn === 'function') {
+                    delRowsFn(selectedData);
+                }
+            });            
+        }
+
+        /**
          * 获取行数据
          * @author Mathink 2016-09-04T10:52:34+0800
          * @param  {jQuery Object} $row    当前行
@@ -492,7 +592,7 @@
             var rowData = {};
             var $col;
 
-            // 如果是编辑状态, 则去input的值
+            // 如果是编辑状态, 则取input的值
             if ($row.hasClass('row-editable')) {
                 $row.find('[data-key]').each(function () {
                     $col = $(this);

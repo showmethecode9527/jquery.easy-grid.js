@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>easy-grid demo</title>
-    <link rel="stylesheet" href="../css/jquery.easy-grid.css">
+    <link rel="stylesheet" href="../css/jquery.easy-grid.min.css">
 </head>
 <body>
     <button id="add">+add</button>
+    <button id="del-rows">批量删除</button>
     <div id="box"></div>
     <!-- <script src="../lib/jquery/1.9.1/jquery.min.js"></script> -->
     <script src="//cdn.bootcss.com/jquery/1.9.1/jquery.min.js"></script>
@@ -59,20 +60,30 @@
             colKey: ['name', 'studentID', 'mobile', 'class'],
             // 列宽, 数组或对象形式(建议不要配置该项, 而是通过样式表进行设置)
             // 如果是数组, 则需要与colKey一一对应
+            // 注意: 各列的宽如果都是百分比, 则其和不能超过100%(即colWidth, selectColWidth, operateCol.width之和)
             colWidth: ['20%', '20%', '20%', '20%'],
-            // {Boolean} 是否显示操作列, 可缺省(默认值为false)
-            // 如果为true, 则增加1列操作列(包含"修改"、"删除"功能)
-            showOperateCol: true,
             // {Array} 可选参数
             // 当表格可以修改时, 如果key所对应的值不可修改
             primaryKey: ['studentID'],
-            // 操作列的宽, 当showOperateCol为false时, 该值无效
-            // 注意: 该值中的width与colWidth各项值之和不能大于100%(如果各项值都为百分数的话)
+            // {Boolean} 是否显示选择列, 可缺省(默认值为false)
+            // 如果为true, 则表格会增加1列，每列的单元格中显示一个复选按钮
+            showSelectCol: true,
+            // 选择列的宽, 可缺省(默认值为'0'), 当且仅当showSelectCol为true时有效
+            // 注意: 各列的宽如果都是百分比, 则其和不能超过100%(即colWidth, selectColWidth, operateCol.width之和)
+            selectColWidth: '5%',
+            // jquery选择器, 当点击该元素时, 批量删除选中的行
+            delRowsSelector: '#del-rows',
+            delRowsFn: delRows,
+            // {Boolean} 是否显示操作列, 可缺省(默认值为false)
+            // 如果为true, 则增加1列操作列(包含"修改"、"删除"功能)
+            showOperateCol: true,
+            // 操作列的配置项, 当showOperateCol为false时, 该值无效
+            // 注意: 各列的宽如果都是百分比, 则其和不能超过100%(即colWidth, selectColWidth, operateCol.width之和)
             operateCol: {
                 // 操作列的表头
                 header: '操作',
                 // 操作列的宽
-                width: '20%',
+                width: '15%',
                 // 保存项配置
                 update: {
                     text: '修改',
@@ -145,6 +156,12 @@
 
         function cancel() {
             console.log('cancel');
+        }
+
+        function delRows(data) {
+            console.log('delRows');
+            console.log(data);
+            return true;
         }
     </script>
 </body>
