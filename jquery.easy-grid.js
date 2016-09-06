@@ -576,12 +576,23 @@
                 var selectedData = [];
                 var delRowsFn = $obj.data('easyGridConf').delRowsFn;
                 // 获取所有选中行数据
-                $obj.find('.easy-grid-body .easy-grid-row.selected').each(function () {
+                var $selectedRows = $obj.find('.easy-grid-body .easy-grid-row.selected');
+                $selectedRows.each(function () {
                     selectedData.push(fetchRowData($(this)));
                 });
 
                 if (typeof delRowsFn === 'function') {
-                    delRowsFn(selectedData);
+                    var delRowsResult = delRowsFn(selectedData);
+                    if (delRowsResult) {
+                        $selectedRows.animate({
+                            height: 0,
+                            opacity: 0
+                        }, 300, function () {
+                            $selectedRows.remove();
+                        });
+                    } else {
+                        console.error('批量删除失败');
+                    }
                 }
             });            
         }
