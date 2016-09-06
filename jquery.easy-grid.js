@@ -235,6 +235,10 @@
                     $me.children('.col-default').each(function (i) {
                         // 这里不能直接使用width()方法(当width为百分数时会出问题)
                         // $(this).width(colWidth[i]);
+                        if (parseInt(colWidth[i], 10) === 0) {
+                            // 添加类名, 便于清空默认样式
+                            $(this).addClass('hide');
+                        }
                         this.style.width = colWidth[i];
                     });
                     if (showSelectCol === 'true') {

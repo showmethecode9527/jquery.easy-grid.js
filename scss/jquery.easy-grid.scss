@@ -3,6 +3,15 @@
     
     @at-root .easy-grid-header {
         background: #dadada;
+        box-sizing: border-box;
+        overflow: hidden;
+
+        .easy-grid-col {
+            box-sizing: border-box;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 
     $row-height: 30px;
@@ -36,6 +45,12 @@
 
             .edit-status {
                 text-align: center;
+            }
+
+            &.hide {
+                margin: 0 !important;
+                border: none !important;
+                padding: 0 !important;
             }
         }
 
