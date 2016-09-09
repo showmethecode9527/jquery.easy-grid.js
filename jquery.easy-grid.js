@@ -61,6 +61,7 @@
             var showSelectCol = conf.showSelectCol;
             // 表格源数据
             var data = conf.data;
+            var dataLength = data.length;
 
             var gridStr = '<div class="easy-grid">';
 
@@ -74,17 +75,34 @@
                     showOperateCol: showOperateCol,
                     operateCol: conf.operateCol
                 };
+                var emptyData;
                 // 如果用户没有配置表头, 或者将表头配置为false
                 if (showHeader.toString() === 'false') {
-                    // gridStr = generateGridBody(data, colKey);
-                    gridStr += generateGridBody(data, bodyParam);
+                    if (dataLength !== 0) {
+                        // gridStr = generateGridBody(data, colKey);
+                        gridStr += generateGridBody(data, bodyParam);
+                    } else {
+                        emptyData = {};
+                        colKey.forEach(function (v) {
+                            emptyData[v] = '';
+                        });
+                        gridStr += generateGridBody([emptyData], bodyParam);
+                    }
                 } else {
                     // 表头字段, 当showHeader为false时无效
                     var header = conf.header;
                     // 1. 生成表头
                     gridStr += generateGridHeader(header, showSelectCol, showOperateCol, conf.operateCol);
-                    // 2. 生成表格主体内容
-                    gridStr += generateGridBody(data, bodyParam);
+                    if (dataLength !== 0) {
+                        // 2. 生成表格主体内容
+                        gridStr += generateGridBody(data, bodyParam);
+                    } else {
+                        emptyData = {};
+                        colKey.forEach(function (v) {
+                            emptyData[v] = '';
+                        });
+                        gridStr += generateGridBody([emptyData], bodyParam, true);
+                    }
                 }
             } else {
                 console.log('源数据是二维数组');
@@ -133,11 +151,12 @@
         /**
          * 生成表格主体内容
          * @author Mathink 2016-09-03T23:35:30+0800
-         * @param  {Array}  data        对象数组或二维数组
-         * @param  {Array}  param 配置参数: {colKey: [], showOperateCol: true, operateCol: {}}
-         * @return {String} str         表格主体内容DOM字符串
+         * @param  {Array}   data   对象数组或二维数组
+         * @param  {Array}   param  配置参数: {colKey: [], showOperateCol: true, operateCol: {}}
+         * @param  {Boolean} isHide 是否显示(当配置参数中的data为空数组时, 该值为true)
+         * @return {String}  str    表格主体内容DOM字符串
          */
-        function generateGridBody(data, param) {
+        function generateGridBody(data, param, isHide) {
             var colKey = param.colKey;
             var showOperateCol = param.showOperateCol;
             var showSelectCol = param.showSelectCol;
@@ -164,7 +183,11 @@
                 console.log('源数据是二维数组');
             } else {
                 data.forEach(function (v) {
-                    str += '<div class="easy-grid-row">';
+                    if (isHide) {
+                        str += '<div class="easy-grid-row grid-row-model">';
+                    } else {
+                        str += '<div class="easy-grid-row">';
+                    }
                     // 如果配置了"选择列"
                     if (showSelectCol.toString() === 'true') {
                         str +=  '<div class="easy-grid-col col-select">' +
@@ -349,9 +372,9 @@
         function copyRow($obj, $gridBody, flag) {
             var $rowCopy;
             if (flag === 'start') {
-                $rowCopy = $gridBody.children('.easy-grid-row:eq(0)').clone(true);
+                $rowCopy = $gridBody.children('.easy-grid-row:eq(0)').clone(true).removeClass('grid-row-model');
             } else {
-                $rowCopy = $gridBody.children('.easy-grid-row:last').clone(true);
+                $rowCopy = $gridBody.children('.easy-grid-row:last').clone(true).removeClass('grid-row-model');
             }
 
             var addRowPrimaryKey = $obj.data('easyGridConf').addRowPrimaryKey;
@@ -552,14 +575,25 @@
             });
 
             // 点击表头中的复选框
-            $obj.find('.easy-grid-header .select-row').on('click', function () {
+            $obj.find('.easy-grid-header .select-row').on('click', function (e) {
                 var $me = $(this);
+                // 如果没有数据行, 则无效
+                var $gridBody = $obj.find('.easy-grid-body');
+                if ($gridBody.children('.grid-row-model').length === 1 &&
+                    $gridBody.children('.easy-grid-row').length === 1) {
+                    e.preventDefault();
+                    return;
+                }
+                
                 var $headerRow = $me.closest('.easy-grid-row');
                 if ($headerRow.hasClass('selected')) {
-                    $obj.find('.easy-grid-body .select-row:checked').trigger('click');
+                    // $obj.find('.easy-grid-body .select-row:checked').trigger('click');
+                    // $obj.find('.easy-grid-body .easy-grid-row').not('.grid-row-model').find('.select-row:checked').trigger('click');
+                    $obj.find('.easy-grid-body .easy-grid-row:not(.grid-row-model)').find('.select-row:checked').trigger('click');
                     $headerRow.removeClass('selected');
                 } else {
-                    $obj.find('.easy-grid-body .select-row:not(:checked)').trigger('click');
+                    // $obj.find('.easy-grid-body .select-row:not(:checked)').trigger('click');
+                    $obj.find('.easy-grid-body .easy-grid-row:not(.grid-row-model)').find('.select-row:not(:checked)').trigger('click');
                     $headerRow.addClass('selected');
                 }
             });
@@ -584,6 +618,10 @@
                 if (typeof delRowsFn === 'function') {
                     var delRowsResult = delRowsFn(selectedData);
                     if (delRowsResult) {
+                        // 如果勾选了所有行, 则回置复选按钮
+                        if ($obj.find('.easy-grid-header > .easy-grid-row').hasClass('selected')) {
+                            $obj.find('.select-row-all').trigger('click');
+                        }
                         $selectedRows.animate({
                             height: 0,
                             opacity: 0
@@ -636,11 +674,10 @@
             var confData = conf.data;
             if ($.isArray(confData)) {
                 if (typeof confData[0] === 'undefined') {
-                    console.error('"data"参数必须是对象数组或二维数组!');
-                    return false;
+                    return true;
                 }
             } else {
-                console.error('"data"参数必须是数组!');
+                console.error('"data"参数应该是对象数组或二维数组!');
                 return false;
             }
             return true;

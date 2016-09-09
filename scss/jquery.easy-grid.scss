@@ -26,6 +26,10 @@
         height: $row-height;
         font-size: 0;
 
+        &.grid-row-model {
+            display: none;
+        }
+
         & + .easy-grid-row {
             border-top: 2px solid #ddd;
         }
