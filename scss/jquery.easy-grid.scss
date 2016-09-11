@@ -47,6 +47,12 @@
             text-overflow: ellipsis;
             white-space: nowrap;
 
+            &.hide {
+                margin: 0 !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+
             .edit-status {
                 text-align: center;
 
@@ -54,12 +60,39 @@
                     outline: none;
                     border: 1px solid #f00;
                 }
+                &.invalid-bg {
+                    background: #fff785;
+                }
             }
+            
+            $error-tips-bg: #008000;
+            $error-tips-border-color: #008000;
+            $error-tips-text-color: #fff;
+            .error-tips {
+                white-space: pre-wrap;
+                font-size: 12px;
+                background: $error-tips-bg;
+                line-height: 1.5em;
+                border: 1px solid $error-tips-border-color;
+                color: $error-tips-text-color;
 
-            &.hide {
-                margin: 0 !important;
-                border: none !important;
-                padding: 0 !important;
+                position: fixed;
+                z-index: 10;
+
+                display: none;
+
+                &:after {
+                    content: "";
+                    display: block;
+                    width: 0;
+                    height: 0;
+                    margin-left: -6px;
+                    border: 6px solid transparent;
+                    border-top-color: $error-tips-border-color;
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                }
             }
         }
 

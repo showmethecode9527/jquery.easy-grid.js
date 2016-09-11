@@ -22,8 +22,7 @@
             addRowPrimaryKeyDefaultVal: [],
             primaryKey: [],
             showPager: false,
-            pagerSize: 10,
-            pattern: {}
+            pagerSize: 10
         };
         // 获取用户配置项
         var conf = $.extend(defaultConf, userConf);
@@ -291,7 +290,6 @@
             var showSelectCol = conf.showSelectCol;
             var delRowsSelector = conf.delRowsSelector;
             var showAddRow = conf.showAddRow;
-            var pattern = conf.pattern;
 
             // 如果显示操作列
             if (showOperateCol.toString() === 'true') {
@@ -317,21 +315,6 @@
                     addDelRowsEvent($obj, $delRowsNode);
                 }
             }
-
-            // 如果配置了输入校验
-            // if (!$.isEmptyObject(pattern)) {
-            //     for (var key in pattern) {
-            //         $('[data-key="' + key + '"]').children('.edit-status').on('keyup', function (e) {
-            //             console.log(e.keyCode);
-            //             if (!pattern[key].test(this.value)) {
-            //                 this.style.borderColor = '#f00';
-            //             }
-            //         });
-            //     }
-            // }
-            // $('.edit-status').on('keyup', function (e) {
-            //     console.log(e.keyCode);
-            // });
         }
 
         /**
@@ -501,18 +484,52 @@
          * @param  {[type]} $obj [description]
          */
         function addInputCheckEvent($obj) {
-            var pattern = $obj.data('easyGridConf').pattern;
+            // var pattern = $obj.data('easyGridConf').pattern;
+            var verification = $obj.data('easyGridConf').verification;
             $('.edit-status').on('keyup', function (e) {
                 var $me = $(this);
                 var key = $me.parent('.easy-grid-col').attr('data-key');
-                if (pattern.hasOwnProperty(key)) {
-                    if (pattern[key].test($me.val())) {
-                        $me.removeClass('invalid');
+                // if (pattern.hasOwnProperty(key)) {
+                //     if (pattern[key].test($me.val())) {
+                //         $me.removeClass('invalid');
+                //     } else {
+                //         $me.addClass('invalid');
+                //     }
+                // }
+                if (verification.hasOwnProperty(key)) {
+                    if (verification[key].pattern.test($me.val())) {
+                        $me.removeClass('invalid').attr('title', '');
                     } else {
-                        $me.addClass('invalid');
+                        $me.addClass('invalid').attr('title', verification[key].tips);
+                        // showErrorTips($me, verification[key].tips);
                     }
                 }
             });
+        }
+
+        function showErrorTips($obj, tipsText) {
+            var _offset = $obj.offset();
+            var _x = _offset.left,
+                _y = _offset.top,
+                _w = $obj.outerWidth(),
+                _h = $obj.outerHeight();
+            var $errorTips = $obj.siblings('.error-tips');
+            if ($errorTips.length === 0) {
+                $obj.after('<div class="error-tips">' + tipsText + '</div>');
+                $errorTips = $obj.siblings('.error-tips');
+                var errorTipsWidth = $errorTips.outerWidth() > $obj.outerWidth() ? $obj.outerWidth() : $errorTips.outerWidth();
+                $errorTips.css({
+                    "max-width": $obj.outerWidth(),
+                    top: _y - $errorTips.outerHeight() - 10,
+                    left: _x + (_w - errorTipsWidth)
+                }).show();
+            } else {
+                $errorTips.css({
+                    "max-width": $obj.outerWidth(),
+                    top: _y - $errorTips.outerHeight() - 10,
+                    left: _x + (_w - $errorTips.outerWidth())
+                }).show();
+            }
         }
 
         /**
@@ -551,6 +568,16 @@
         function addSaveEvent($obj, callback) {
             var $btn;
             $obj.find('.btn-save').on('click', function () {
+                // 首先检查是否有非法行
+                var $invalidInput = $(this).closest('.easy-grid-row').find('.invalid');
+                if ($invalidInput.length > 0) {
+                    // $invalidInput.addClass('invalid-bg');
+                    // setTimeout(function () {
+                    //     $invalidInput.removeClass('invalid-bg');
+                    // }, 800);
+                    blinkBg($invalidInput, 6, 200, 'invalid-bg')
+                    return;
+                }
                 if (typeof callback === 'function') {
                     var $currentRow = $(this).closest('.easy-grid-row');
                     // 读取行数据
@@ -720,6 +747,20 @@
                 return false;
             }
             return true;
+        }
+
+        function blinkBg($obj, cnt, frequency, clsName) {
+            $obj.each(function () {
+                var $me = $(this);
+                var timerCnt = 0;
+                var blinkTimer = setInterval(function () {
+                    $me.toggleClass(clsName);
+                    if (timerCnt++ > cnt) {
+                        clearInterval(blinkTimer);
+                        $me.removeClass(clsName);
+                    }
+                }, frequency);
+            });
         }
     };
 })(jQuery);
