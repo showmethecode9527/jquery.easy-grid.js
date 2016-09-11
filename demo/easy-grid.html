@@ -58,6 +58,11 @@
             header: ['姓名', '学号', '手机', '班级'],
             // 每列对应的key, 当dataFlag为1时无效
             colKey: ['name', 'studentID', 'mobile', 'class'],
+            pattern: {
+                name: /^[a-zA-Z_]{3,9}/,
+                mobile: /1(3|5|7|8)\d{9}/,
+                class: /[1-9]/
+            },
             // 列宽, 数组或对象形式(建议不要配置该项, 而是通过样式表进行设置)
             // 如果是数组, 则需要与colKey一一对应
             // 注意: 各列的宽如果都是百分比, 则其和不能超过100%(即colWidth, selectColWidth, operateCol.width之和)
@@ -134,7 +139,7 @@
             dataFlag: 0,
             // 必填字段
             // 数据源, 支持对象数组和二维数组(暂不支持)
-            data: []
+            data: gridData
         });
 
         // $.fn.easyGrid.update();

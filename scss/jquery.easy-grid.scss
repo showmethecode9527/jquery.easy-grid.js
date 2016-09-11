@@ -49,6 +49,11 @@
 
             .edit-status {
                 text-align: center;
+
+                &.invalid {
+                    outline: none;
+                    border: 1px solid #f00;
+                }
             }
 
             &.hide {

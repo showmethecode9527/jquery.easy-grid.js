@@ -22,7 +22,8 @@
             addRowPrimaryKeyDefaultVal: [],
             primaryKey: [],
             showPager: false,
-            pagerSize: 10
+            pagerSize: 10,
+            pattern: {}
         };
         // 获取用户配置项
         var conf = $.extend(defaultConf, userConf);
@@ -290,6 +291,7 @@
             var showSelectCol = conf.showSelectCol;
             var delRowsSelector = conf.delRowsSelector;
             var showAddRow = conf.showAddRow;
+            var pattern = conf.pattern;
 
             // 如果显示操作列
             if (showOperateCol.toString() === 'true') {
@@ -315,6 +317,21 @@
                     addDelRowsEvent($obj, $delRowsNode);
                 }
             }
+
+            // 如果配置了输入校验
+            // if (!$.isEmptyObject(pattern)) {
+            //     for (var key in pattern) {
+            //         $('[data-key="' + key + '"]').children('.edit-status').on('keyup', function (e) {
+            //             console.log(e.keyCode);
+            //             if (!pattern[key].test(this.value)) {
+            //                 this.style.borderColor = '#f00';
+            //             }
+            //         });
+            //     }
+            // }
+            // $('.edit-status').on('keyup', function (e) {
+            //     console.log(e.keyCode);
+            // });
         }
 
         /**
@@ -422,6 +439,7 @@
                 $rowCopy.find('.edit-status:eq(0)').focus();
                 // 取消增加行事件(保存事件已克隆)
                 addUndoEvent($obj);
+                addInputCheckEvent($obj);
             }
         }
 
@@ -473,6 +491,27 @@
                     });
                 // 3. 首个编辑框获得焦点
                 $btn.closest('.easy-grid-row').addClass('row-editable').find('.edit-status.can-update:eq(0)').focus().select();
+                addInputCheckEvent($obj);
+            });
+        }
+
+        /**
+         * 输入校验
+         * @author Mathink 2016-09-11T10:30:05+0800
+         * @param  {[type]} $obj [description]
+         */
+        function addInputCheckEvent($obj) {
+            var pattern = $obj.data('easyGridConf').pattern;
+            $('.edit-status').on('keyup', function (e) {
+                var $me = $(this);
+                var key = $me.parent('.easy-grid-col').attr('data-key');
+                if (pattern.hasOwnProperty(key)) {
+                    if (pattern[key].test($me.val())) {
+                        $me.removeClass('invalid');
+                    } else {
+                        $me.addClass('invalid');
+                    }
+                }
             });
         }
 
