@@ -15,6 +15,17 @@ $(selector).easyGrid(options)
     header: ['姓名', '学号', '手机', '班级'],
     // 每列对应的key, 当dataFlag为1时无效
     colKey: ['name', 'studentID', 'mobile', 'class'],
+    valMap: {
+        studentID: {
+            '7': '学号是7'
+        }
+    },
+    verification: {
+        studentID: {
+            pattern: /\d{9}/g,
+            tips: '请填入9位数字'
+        }
+    },
     // 列宽, 数组或对象形式(建议不要配置该项, 而是通过样式表进行设置)
     // 如果是数组, 则需要与colKey一一对应
     // 注意: 各列的宽如果都是百分比, 则其和不能超过100%(即colWidth, selectColWidth, operateCol.width之和)
@@ -90,7 +101,17 @@ $(selector).easyGrid(options)
     dataFlag: 0,
     // 必填字段
     // 数据源, 支持对象数组和二维数组(暂不支持)
-    data: []
+    data: [],
+    renderedCallback: function () {
+        console.log('rendered');
+    },
+    savedCallback: function ($currentRow) {
+        console.log('saved');
+        console.log($currentRow);
+    },
+    deletedCallback: function () {
+        console.log('deleted');
+    }
 }
 ```
 

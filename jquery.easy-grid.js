@@ -21,6 +21,7 @@
             addRowPrimaryKey: [],
             addRowPrimaryKeyDefaultVal: [],
             primaryKey: [],
+            valMap: false,
             showPager: false,
             pagerSize: 10
         };
@@ -41,6 +42,9 @@
                 // $.fn.easyGrid.update = function (data) {
                 //     console.log($me);
                 // };
+                if (typeof conf.renderedCallback === 'function') {
+                    conf.renderedCallback();
+                }
             }
         });
 
@@ -73,7 +77,8 @@
                     colKey: colKey,
                     showSelectCol: showSelectCol,
                     showOperateCol: showOperateCol,
-                    operateCol: conf.operateCol
+                    operateCol: conf.operateCol,
+                    valMap: conf.valMap
                 };
                 var emptyData;
                 // 如果用户没有配置表头, 或者将表头配置为false
@@ -161,6 +166,7 @@
             var showOperateCol = param.showOperateCol;
             var showSelectCol = param.showSelectCol;
             var operateCol = param.operateCol;
+            var valMap = param.valMap;
             var updateStr = '', delStr = '', saveStr = '', cancelStr = '';
             if (typeof operateCol !== 'undefined') {
                 if (typeof operateCol.update !== 'undefined') {
@@ -195,11 +201,34 @@
                                 '</div>';
                     }
 
-                    colKey.forEach(function (keyItem) {
-                        // 类名"col-default"表示基础列, 即由源数据直接产生的
-                        // 与之相对应的是"col-select"和"col-operate"
-                        str += '<div class="easy-grid-col col-default" data-key="' + keyItem + '">' + v[keyItem] + '</div>';
-                    });
+                    // 如果配置了值映射
+                    if (valMap) {
+                        var mappingVal;
+                        colKey.forEach(function (keyItem) {
+                            if (valMap.hasOwnProperty(keyItem)) {
+                                mappingVal = valMap[keyItem][v[keyItem]];
+                                // 类名"col-default"表示基础列, 即由源数据直接产生的
+                                // 与之相对应的是"col-select"和"col-operate"
+                                str += '<div class="easy-grid-col col-default" data-key="' +
+                                        keyItem + '" data-val="' + v[keyItem] + '">' +
+                                        (mappingVal ? mappingVal : v[keyItem]) + '</div>';
+                            } else {
+                                // 类名"col-default"表示基础列, 即由源数据直接产生的
+                                // 与之相对应的是"col-select"和"col-operate"
+                                str += '<div class="easy-grid-col col-default" data-key="' +
+                                        keyItem + '" data-val="' + v[keyItem] + '">' +
+                                        v[keyItem] + '</div>';
+                            }
+                        });
+                    } else {
+                        colKey.forEach(function (keyItem) {
+                            // 类名"col-default"表示基础列, 即由源数据直接产生的
+                            // 与之相对应的是"col-select"和"col-operate"
+                            str += '<div class="easy-grid-col col-default" data-key="' +
+                                    keyItem + '" data-val="' + v[keyItem] + '">' +
+                                    v[keyItem] + '</div>';
+                        });
+                    }
 
                     if (showOperateCol.toString() === 'true') {
                         str +=  '<div class="easy-grid-col col-operate">' +
@@ -556,6 +585,12 @@
                         console.warn('删除失败');
                     }
                 }
+
+                // 保存成功后的回调
+                var deletedCallback = $obj.data('easyGridConf').deletedCallback;
+                if (typeof deletedCallback === 'function') {
+                    deletedCallback();
+                }
             });            
         }
 
@@ -568,8 +603,10 @@
         function addSaveEvent($obj, callback) {
             var $btn;
             $obj.find('.btn-save').on('click', function () {
+                $btn = $(this);
+                var $currentRow = $btn.closest('.easy-grid-row');
                 // 首先检查是否有非法行
-                var $invalidInput = $(this).closest('.easy-grid-row').find('.invalid');
+                var $invalidInput = $currentRow.find('.invalid');
                 if ($invalidInput.length > 0) {
                     // $invalidInput.addClass('invalid-bg');
                     // setTimeout(function () {
@@ -579,14 +616,13 @@
                     return;
                 }
                 if (typeof callback === 'function') {
-                    var $currentRow = $(this).closest('.easy-grid-row');
                     // 读取行数据
                     var rowData = fetchRowData($currentRow);
                     var saveResult = callback(rowData);
 
                     if (saveResult) {
                         var val;
-                        $btn = $(this);
+                        // $btn = $(this);
                         $btn.closest('.easy-grid-row').find('.edit-status').each(function () {
                             val = this.value;
                             $(this).parent().html(val);
@@ -601,6 +637,11 @@
                     } else {
                         console.warn('保存失败');
                     }
+                }
+                // 保存成功后的回调
+                var savedCallback = $obj.data('easyGridConf').savedCallback;
+                if (typeof savedCallback === 'function') {
+                    savedCallback($currentRow);
                 }
             });
         }
