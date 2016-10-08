@@ -210,24 +210,24 @@
                                 mappingVal = valMap[keyItem][v[keyItem]];
                                 // 类名"col-default"表示基础列, 即由源数据直接产生的
                                 // 与之相对应的是"col-select"和"col-operate"
-                                str += '<div class="easy-grid-col col-default" data-key="' +
-                                        keyItem + '" data-val="' + v[keyItem] + '">' +
-                                        (mappingVal ? mappingVal : v[keyItem]) + '</div>';
+                                str +=  '<div class="easy-grid-col col-default" data-key="' + keyItem + '">' +
+                                            (mappingVal ? mappingVal : v[keyItem]) +
+                                        '</div>';
                             } else {
                                 // 类名"col-default"表示基础列, 即由源数据直接产生的
                                 // 与之相对应的是"col-select"和"col-operate"
-                                str += '<div class="easy-grid-col col-default" data-key="' +
-                                        keyItem + '" data-val="' + v[keyItem] + '">' +
-                                        v[keyItem] + '</div>';
+                                str +=  '<div class="easy-grid-col col-default" data-key="' + keyItem + '">' +
+                                            v[keyItem] +
+                                        '</div>';
                             }
                         });
                     } else {
                         colKey.forEach(function (keyItem) {
                             // 类名"col-default"表示基础列, 即由源数据直接产生的
                             // 与之相对应的是"col-select"和"col-operate"
-                            str += '<div class="easy-grid-col col-default" data-key="' +
-                                    keyItem + '" data-val="' + v[keyItem] + '">' +
-                                    v[keyItem] + '</div>';
+                            str +=  '<div class="easy-grid-col col-default" data-key="' + keyItem + '">' +
+                                        v[keyItem] +
+                                    '</div>';
                         });
                     }
 
@@ -365,46 +365,34 @@
                 // var $rowCopy;
 
                 copyRow($obj, $gridBody, position);
-                // 在首行插入
-                // if (position === 'start') {
-                //     $rowCopy = $gridBody.children('.easy-grid-row:eq(0)').clone(true);
-                //     // 如果首行正处于修改状态
-                //     if ($rowCopy.hasClass('row-editable')) {
-                //         $rowCopy.find('.edit-status').val('').attr('placeholder', '')
-                //             .end().find('.btn-cancel').hide().siblings('.btn-undo').show();
-                //         $rowCopy.prependTo($gridBody);
-                //         $gridBody.find('.can-update:eq(0)').focus();
-                //         // 取消增加行事件(保存事件已克隆)
-                //         addUndoEvent($obj);
-                //     } else {
-                //         var addRowPrimaryKey = $obj.data('easyGridConf').addRowPrimaryKey;
-                //         var $col;
-                //         $rowCopy.addClass('row-editable').find('.col-default').each(function () {
-                //             $col = $(this);
-                //             if ($.inArray($col.attr('data-key'), addRowPrimaryKey) === -1) {
-                //                 $col.html('<input type="text" class="edit-status" placeholder="">');
-                //             } else {
-                //                 $col.html('<input type="text" class="edit-status" disabled title="该项不可修改" placeholder="">');
-                //             }
-                //         }).siblings('.col-operate').find('.btn-update, .btn-del, .btn-cancel').hide().siblings('.btn-save, .btn-undo').show();
-                //         $rowCopy.prependTo($gridBody);
-                //         $gridBody.find('.can-update:eq(0)').focus();
-                //         // 取消增加行事件(保存事件已克隆)
-                //         addUndoEvent($obj);
-                //     }
-                // } else {
-                //     // 在尾行追加
-                //     $rowCopy = $gridBody.children('.easy-grid-row:eq(0)').clone(true);
-                // }
+
+                var afterClickAddCallback = $obj.data('easyGridConf').afterClickAddCallback;
+                if (typeof afterClickAddCallback === 'function') {
+                    switch (position) {
+                        case 'start':
+                            afterClickAddCallback($obj.find('.row-editable:first'));
+                            break;
+                        case 'end':
+                            afterClickAddCallback($obj.find('.row-editable:last'));
+                            break;
+                        default:
+                            break;
+                    }
+                }
             });
         }
 
         function copyRow($obj, $gridBody, flag) {
             var $rowCopy;
             if (flag === 'start') {
-                $rowCopy = $gridBody.children('.easy-grid-row:eq(0)').clone(true).removeClass('grid-row-model');
+                $rowCopy = $gridBody.find('.easy-grid-row:eq(0)').clone(true).removeClass('grid-row-model');
             } else {
-                $rowCopy = $gridBody.children('.easy-grid-row:last').clone(true).removeClass('grid-row-model');
+                $rowCopy = $gridBody.find('.easy-grid-row:last').clone(true).removeClass('grid-row-model');
+            }
+
+            // 增加jquery.mCustomScrollbar.js插件支持(2016-9-23)
+            if ($gridBody.find('.mCSB_container').length !== 0) {
+                $gridBody = $gridBody.find('.mCSB_container');
             }
 
             var addRowPrimaryKey = $obj.data('easyGridConf').addRowPrimaryKey;
@@ -505,6 +493,11 @@
                 // 3. 首个编辑框获得焦点
                 $btn.closest('.easy-grid-row').addClass('row-editable').find('.edit-status.can-update:eq(0)').focus().select();
                 addInputCheckEvent($obj);
+
+                var afterClickUpdateCallback = $obj.data('easyGridConf').afterClickUpdateCallback;
+                if (typeof afterClickUpdateCallback === 'function') {
+                    afterClickUpdateCallback($btn.closest('.easy-grid-row'));
+                }
             });
         }
 
@@ -616,12 +609,16 @@
                     blinkBg($invalidInput, 6, 200, 'invalid-bg')
                     return;
                 }
+
+                // 保存成功后的回调
+                var savedCallback = $obj.data('easyGridConf').savedCallback;
+
                 if (typeof callback === 'function') {
                     // 读取行数据
                     var rowData = fetchRowData($currentRow);
                     var saveResult = callback(rowData);
 
-                    if (saveResult) {
+                    if (saveResult.result) {
                         var val;
                         // $btn = $(this);
                         $btn.closest('.easy-grid-row').find('.edit-status').each(function () {
@@ -635,14 +632,13 @@
                         } catch (e) {
                             console.warn(e);
                         }
+
+                        if (typeof savedCallback === 'function') {
+                            savedCallback($currentRow, saveResult.data);
+                        }
                     } else {
                         console.warn('保存失败');
                     }
-                }
-                // 保存成功后的回调
-                var savedCallback = $obj.data('easyGridConf').savedCallback;
-                if (typeof savedCallback === 'function') {
-                    savedCallback($currentRow);
                 }
             });
         }
@@ -663,6 +659,11 @@
                 });
                 // 隐藏"保存"、"取消"按钮, 显示"修改"、"删除"
                 $btn.hide().siblings('.btn-save').hide().siblings('.btn-update, .btn-del').show().closest('.easy-grid-row').removeClass('row-editable');
+
+                var canceledCallback = $obj.data('easyGridConf').canceledCallback;
+                if (typeof canceledCallback === 'function') {
+                    canceledCallback($btn.closest('.easy-grid-row'));
+                }
             });
         }
 
@@ -687,8 +688,8 @@
                 var $me = $(this);
                 // 如果没有数据行, 则无效
                 var $gridBody = $obj.find('.easy-grid-body');
-                if ($gridBody.children('.grid-row-model').length === 1 &&
-                    $gridBody.children('.easy-grid-row').length === 1) {
+                if ($gridBody.find('.grid-row-model').length === 1 &&
+                    $gridBody.find('.easy-grid-row').length === 1) {
                     e.preventDefault();
                     return;
                 }
