@@ -22,6 +22,7 @@
             addRowPrimaryKeyDefaultVal: [],
             primaryKey: [],
             valMap: false,
+            verification: null,
             showPager: false,
             pagerSize: 10
         };
@@ -525,7 +526,7 @@
                 //         $me.addClass('invalid');
                 //     }
                 // }
-                if (verification.hasOwnProperty(key)) {
+                if (verification !== null && verification.hasOwnProperty(key)) {
                     if (verification[key].pattern.test($me.val())) {
                         $me.removeClass('invalid').attr('title', '');
                     } else {
